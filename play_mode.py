@@ -20,7 +20,10 @@ def handle_events():
             game_framework.quit()
 
         else:
-            common.boy.handle_event(event)
+            # 키보드 이벤트(KEYDOWN/KEYUP) 만 boy에게 전달
+            if event.type in (SDL_KEYDOWN, SDL_KEYUP):
+                common.boy.handle_event(event)
+            # 마우스 이동 등 불필요한 이벤트는 무시하여 상태머신의 처리되지 않은 이벤트 로그를 줄임
 
 
 def init():
@@ -50,4 +53,3 @@ def pause():
 
 def resume():
     pass
-

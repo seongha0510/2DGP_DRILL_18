@@ -6,15 +6,17 @@ class Court:
         self.image = load_image('futsal_court.png')
         self.cw = get_canvas_width()
         self.ch = get_canvas_height()
-        # fiil here
+        self.w = self.image.w
+        self.h = self.image.h
 
 
     def update(self):
-        # fill here
+        self.window_left = clamp(0, int(common.boy.x) - self.cw // 2, self.w - self.cw - 1)
+        self.window_bottom = clamp(0, int(common.boy.y) - self.ch // 2, self.h - self.ch - 1)
         pass
 
     def draw(self):
-        self.image.draw(self.cw // 2, self.ch // 2)
+        self.image.clip_draw_to_origin(self.window_left, self.window_bottom, self.cw, self.ch, 0, 0)
 
 
 class TileCourt:
@@ -73,4 +75,3 @@ class InfiniteCourt:
 
     def handle_event(self, event):
         pass
-

@@ -1,5 +1,8 @@
 import time
 
+# module-level frame_time 정의 (다른 모듈에서 참조 가능하도록)
+frame_time = 0.0
+
 
 def change_mode(mode):
     global stack

@@ -1,8 +1,7 @@
-from pico2d import load_image, load_font, draw_rectangle, get_canvas_width, get_canvas_height, clamp
+from pico2d import load_image, load_font, get_canvas_width, get_canvas_height, clamp
 from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_UP, SDLK_DOWN
 
 import common
-import game_world
 import game_framework
 
 from state_machine import StateMachine
@@ -51,10 +50,13 @@ class Idle:
         # Removed timeout trigger for sleep.
 
     def draw(self):
+        sx, sy = get_canvas_width() // 2, get_canvas_height() // 2
+        self.boy.font.draw(sx - 100, sy + 60, f'({self.boy.x:5.5}, {self.boy.y:5.5})', (255, 255, 0))
+
         if self.boy.face_dir == 1:  # right
-            self.boy.image.clip_draw(int(self.boy.frame) * 100, 300, 100, 100, self.boy.x, self.boy.y)
+            self.boy.image.clip_draw(int(self.boy.frame) * 100, 300, 100, 100, sx, sy)
         else:  # face_dir == -1: # left
-            self.boy.image.clip_draw(int(self.boy.frame) * 100, 200, 100, 100, self.boy.x, self.boy.y)
+            self.boy.image.clip_draw(int(self.boy.frame) * 100, 200, 100, 100, sx, sy)
 
 
 class Run:
@@ -75,15 +77,19 @@ class Run:
 
 
     def draw(self):
+        sx, sy = get_canvas_width() // 2, get_canvas_height() // 2
+        self.boy.font.draw(sx - 100, sy + 60, f'({self.boy.x:5.5}, {self.boy.y:5.5})', (255, 255, 0))
+
+
         if self.boy.xdir == 0: # 위 아래로 움직이는 경우
             if self.boy.face_dir == 1: # right
-                self.boy.image.clip_draw(int(self.boy.frame) * 100, 100, 100, 100, self.boy.x, self.boy.y)
+                self.boy.image.clip_draw(int(self.boy.frame) * 100, 100, 100, 100, sx, sy)
             else:
-                self.boy.image.clip_draw(int(self.boy.frame) * 100, 0, 100, 100, self.boy.x, self.boy.y)
+                self.boy.image.clip_draw(int(self.boy.frame) * 100, 0, 100, 100, sx, sy)
         elif self.boy.xdir == 1:
-            self.boy.image.clip_draw(int(self.boy.frame) * 100, 100, 100, 100, self.boy.x, self.boy.y)
+            self.boy.image.clip_draw(int(self.boy.frame) * 100, 100, 100, 100, sx, sy)
         else:
-            self.boy.image.clip_draw(int(self.boy.frame) * 100, 0, 100, 100, self.boy.x, self.boy.y)
+            self.boy.image.clip_draw(int(self.boy.frame) * 100, 0, 100, 100, sx, sy)
 
 
 class Boy:
@@ -91,7 +97,7 @@ class Boy:
 
         self.font = load_font('ENCR10B.TTF', 16)
 
-        self.x, self.y = get_canvas_width() / 2, get_canvas_height() / 2
+        self.x, self.y = common.court.w / 2, common.court.h / 2
 
         self.frame = 0
         self.face_dir = 1
@@ -111,30 +117,37 @@ class Boy:
 
     def update(self):
         self.state_machine.update()
-        self.x = clamp(50, self.x, get_canvas_width() - 50)
-        self.y = clamp(50, self.y, get_canvas_height() - 50)
 
+        self.x = clamp(50.0, self.x, common.court.w - 50.0)
+        self.y = clamp(50.0, self.y, common.court.h - 50.0)
 
     def handle_event(self, event):
+        # 키 이벤트인지 확인
+        if not hasattr(event, 'key'):
+            return
+
         if event.key in (SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN):
-            cur_xdir, cur_ydir = self.xdir, self.ydir
-            if event.type == SDL_KEYDOWN:
-                if event.key == SDLK_LEFT: self.xdir -= 1
-                elif event.key == SDLK_RIGHT: self.xdir += 1
-                elif event.key == SDLK_UP: self.ydir += 1
-                elif event.key == SDLK_DOWN: self.ydir -= 1
-            elif event.type == SDL_KEYUP:
-                if event.key == SDLK_LEFT: self.xdir += 1
-                elif event.key == SDLK_RIGHT: self.xdir -= 1
-                elif event.key == SDLK_UP: self.ydir -= 1
-                elif event.key == SDLK_DOWN: self.ydir += 1
-            if cur_xdir != self.xdir or cur_ydir != self.ydir: # 방향키에 따른 변화가 있으면
-                if self.xdir == 0 and self.ydir  == 0: # 멈춤
-                    self.state_machine.handle_state_event(('STOP', self.face_dir)) # 스탑 시 이전 방향 전달
-                else: # 움직임
-                    self.state_machine.handle_state_event(('RUN', None))
+             cur_xdir, cur_ydir = self.xdir, self.ydir
+             if event.type == SDL_KEYDOWN:
+                 if event.key == SDLK_LEFT: self.xdir -= 1
+                 elif event.key == SDLK_RIGHT: self.xdir += 1
+                 elif event.key == SDLK_UP: self.ydir += 1
+                 elif event.key == SDLK_DOWN: self.ydir -= 1
+             elif event.type == SDL_KEYUP:
+                 if event.key == SDLK_LEFT: self.xdir += 1
+                 elif event.key == SDLK_RIGHT: self.xdir -= 1
+                 elif event.key == SDLK_UP: self.ydir -= 1
+                 elif event.key == SDLK_DOWN: self.ydir += 1
+             if cur_xdir != self.xdir or cur_ydir != self.ydir: # 방향키에 따른 변화가 있으면
+                 if self.xdir == 0 and self.ydir  == 0: # 멈춤
+                     self.state_machine.handle_state_event(('STOP', self.face_dir)) # 스탑 시 이전 방향 전달
+                 else: # 움직임
+                     self.state_machine.handle_state_event(('RUN', None))
         else:
-            self.state_machine.handle_state_event(('INPUT', event))
+            # 스페이스 키만 별도 처리하고 그 외 키는 무시
+            if event.type == SDL_KEYDOWN and event.key == SDLK_SPACE:
+                self.state_machine.handle_state_event(('INPUT', event))
+            # 그 외는 무시하여 불필요한 처리되지 않은 이벤트 로그 방지
 
 
     def draw(self):
