@@ -36,3 +36,23 @@ class Ball:
 
     def draw(self):
         self.image.draw(self.x, self.y)
+
+    def get_bb(self):
+        return self.x - 10, self.y - 10, self.x +10 , self.y +10
+
+    def handle_collision(self, group, other):
+        pass
+
+    def reset(self):
+        self.x = random.randint(600,800)
+        self.y = random.randint(1200,1600)
+        pass
+
+    class Bigball:
+        def __init__(self):
+            self.x = random.randint(400,600)
+            self.y = random.randint(800,1000)
+            self.image = load_image('ball21x21png')
+            pass
+
+    
